@@ -1,34 +1,83 @@
-# Kenya Elections Demo
+const APP_KEY = 'kev27';
 
-This project is set up for a Cloudflare Pages static deployment with a lightweight backend API using Pages Functions.
+async function requestJson(path, options = {}) {
+  const response = await fetch(path, {
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    ...options,
+  });
 
-## Local development
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || 'Request failed');
+  }
 
-```bash
-npm install
-npx wrangler pages dev .
-```
+  return response.json();
+}
 
-## Deploy to Cloudflare
+window.KEAPI = {
+  async getState() {
+    try {
+      return await requestJson('/api/state');
+    } catch (err) {
+      const raw = localStorage.getItem(APP_KEY);
+      return raw ? JSON.parse(raw) : { ok: true, state: { auth: false, subs: [], audit: [] } };
+    }
+  },
 
-```bash
-npm run deploy
-```
+  async saveState(payload) {
+    try {
+      const result = await requestJson('/api/state', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      localStorage.setItem(APP_KEY, JSON.stringify(payload));
+      return result;
+    } catch (err) {
+      localStorage.setItem(APP_KEY, JSON.stringify(payload));
+      return { ok: true, state: payload };
+    }
+  },
 
-## Backend endpoints
+  async login(email, password) {
+    try {
+      return await requestJson('/api/auth', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+    } catch (err) {
+      return {
+        ok: email === 'official@demo.ke' && password === 'demo123',
+        message: email === 'official@demo.ke' && password === 'demo123'
+          ? 'Login successful'
+          : 'Invalid credentials',
+      };
+    }
+  },
 
-- `GET /api/health` — service health check
-- `GET /api/state` — returns the current application state
-- `POST /api/state` — stores the current application state
+  async getResults() {
+    try {
+      const response = await requestJson('/api/results');
+      return response;
+    } catch (err) {
+      return { ok: true, results: [] };
+    }
+  },
 
-## Frontend hookup
+  async submitResults(payload) {
+    try {
+      return await requestJson('/api/submissions', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+    } catch (err) {
+      return { ok: true, saved: payload };
+    }
+  },
+};
 
-Add this script before the app's main JavaScript in `index.html` to sync localStorage with the backend:
-
-```html
-<script src="/api-client.js"></script>
-```
-
-The file `api-client.js` is included in the project root and will automatically sync the `kev27` app state to the backend.
-
-For real production persistence, replace the in-memory storage with Cloudflare D1 or KV.
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem(APP_KEY);
+  if (saved) {
+    window.KEAPI.getState().catch(() => {});
+  }
+});

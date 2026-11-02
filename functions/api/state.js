@@ -15,9 +15,7 @@ export async function onRequest(context) {
     if (request.method === 'POST') {
       const body = await request.json();
       const incoming = body && typeof body === 'object' ? body : {};
-
       Object.assign(stateStore, incoming);
-
       return Response.json({ ok: true, state: stateStore, message: 'State saved' });
     }
 
