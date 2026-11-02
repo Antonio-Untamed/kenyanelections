@@ -1,38 +1,57 @@
 # Kenya Elections Demo
 
-This project is a Cloudflare Pages app with Pages Functions for backend APIs.
+This project is configured for a production-ready Cloudflare deployment with a static frontend and backend APIs backed by Cloudflare Pages Functions and D1.
 
-## Run locally
+## Local development
 
 ```bash
 npm install
 npx wrangler pages dev .
 ```
 
-## Deploy to Cloudflare
+## Cloudflare setup
 
-1. Push this repo to GitHub.
-2. Open Cloudflare Dashboard.
-3. Go to Workers & Pages > Create application > Pages.
-4. Connect the repository.
-5. Set the output directory to the repo root (`.`).
-6. Deploy.
+1. Create a D1 database:
 
-## Available APIs
+```bash
+npx wrangler d1 create kenya-elections-db
+```
 
-- `GET /api/health` — health check
-- `GET /api/state` — read the current app state
-- `POST /api/state` — save app state
-- `POST /api/auth` — validate official login
-- `GET /api/results` — fetch election results data
+2. Copy the database ID into `wrangler.toml`.
+3. Create the schema:
+
+```bash
+npx wrangler d1 execute kenya-elections-db --file=./schema.sql
+```
+
+4. Add runtime secrets if you want to replace the demo credentials:
+
+```bash
+npx wrangler secret put ADMIN_EMAIL
+npx wrangler secret put ADMIN_PASSWORD
+```
+
+## Deploy
+
+```bash
+npm run deploy
+```
+
+## API endpoints
+
+- `GET /api/health` — basic health check
+- `POST /api/auth` — validate the official login
+- `GET /api/results` — read results from D1, or demo data fallback
 - `POST /api/submissions` — save a submitted result record
+- `GET /api/state` — read saved app state
+- `POST /api/state` — persist app state
 
-## Frontend integration
+## Frontend usage
 
-Include this script in your HTML before the app logic:
+Add this before the application logic:
 
 ```html
 <script src="/api-client.js"></script>
 ```
 
-Then call the app API through `window.KEAPI`.
+Then call the API via `window.KEAPI`.

@@ -4,7 +4,9 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "npx wrangler pages dev .",
-    "deploy": "npx wrangler pages deploy . --project-name kenyanelections"
+    "deploy": "npx wrangler pages deploy . --project-name kenyanelections",
+    "db:create": "npx wrangler d1 create kenya-elections-db",
+    "db:migrate": "npx wrangler d1 execute kenya-elections-db --file=./schema.sql"
   },
   "devDependencies": {
     "wrangler": "^3.100.0"
