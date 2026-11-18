@@ -4,6 +4,7 @@ This project is configured for a production-ready Cloudflare deployment with a s
 
 ## Local development
 
+
 ```bash
 npm install
 npx wrangler pages dev .
